@@ -19,7 +19,7 @@ def add_item():
 
 @app.route("/delete_item")
 def delete_item():
-    return f"<h3>Deleted item is: {lst.pop(-1)}<h3>"
+    return f"<h3>Deleted item is: {lst.pop()}<h3>"
 
 
 if __name__ == '__main__':
