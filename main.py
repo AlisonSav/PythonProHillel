@@ -3,7 +3,7 @@ from random import randint
 
 app = Flask(__name__)
 
-lst = [1, 2, 3, 4, 5]
+lst = []
 
 
 @app.route("/")
@@ -13,13 +13,19 @@ def show_items():
 
 @app.route("/add_item")
 def add_item():
-    lst.append(randint(1, 100))
-    return f"<h3>Updated list: {lst}<h3>"
+    if len(lst) >= 10:
+        return f"<h3>Sorry! You can't add value if list's length more than 10!<h3>"
+    else:
+        lst.append(randint(1, 100))
+        return f"<h3>Updated list: {lst}<h3>"
 
 
 @app.route("/delete_item")
 def delete_item():
-    return f"<h3>Deleted item is: {lst.pop()}<h3>"
+    if lst:
+        return f"<h3>Deleted item is: {lst.pop()}<h3>"
+    else:
+        return f"<h3>Your list {lst} is empty. You can't delete value<h3>"
 
 
 if __name__ == '__main__':
