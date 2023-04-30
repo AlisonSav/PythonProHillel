@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 from random import randint
 
 app = Flask(__name__)
@@ -9,8 +9,8 @@ class User:
     def __init__(self, name, language):
         self.grade = ''
         self.course = ''
-        self.name = name
-        self.language = language
+        self.name = self.name_check(name)
+        self.language = self.language_check(language)
 
     def name_check(self, name):
         if name.isalpha():
@@ -28,11 +28,11 @@ class User:
             return f'<h3>You chose incorrect language. Try again!<h3>'
 
 
+@app.route("/")
 @app.route("/login")
 def login(self):
-    self.name = request.form['language']
-    self.language = request.form['language']
-    return f"""
+    if User.name_check(self, request.form.get('username')):
+        return f"""
             <h3>Hello!<h3>
             <form action="/home_page" method="POST">
               <div>
@@ -46,11 +46,13 @@ def login(self):
               <br>
                 <button>Log in</button>
             </form>
-            
-"""
+            """
+    else:
+        error = 'Неверное имя пользователя или пароль'
+    return render_template('login.html', error=error)
 
 
-@app.route("/home_page", methods=["POST"])
+@app.route("/home_page", methods=["GET", "POST"])
 def home_page():
     return f"""
             <h3>Hello!<h3>
