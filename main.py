@@ -5,6 +5,8 @@ app = Flask(__name__)
 
 
 class User:
+    name = ''
+    language = ''
 
     def __init__(self, name, language):
         self.grade = ''
@@ -17,7 +19,7 @@ class User:
             self.name = name
             return self.name
         else:
-            return f"<h3>Name can't contain digits or symbols<h3>"
+            raise Exception
 
     def language_check(self, language):
         languages = {'Python', 'Java', 'JS', 'Ruby'}
@@ -25,36 +27,36 @@ class User:
             self.language = language
             return self.language
         else:
-            return f'<h3>You chose incorrect language. Try again!<h3>'
+            raise Exception
 
 
 @app.route("/")
 @app.route("/login")
-def login(self):
-    if User.name_check(self, request.form.get('username')):
-        return f"""
+def login():
+    return f"""
             <h3>Hello!<h3>
             <form action="/home_page" method="POST">
               <div>
                 <label for="name">Please enter name</label>
-                <input name ="name" id="add_name" value="str" />
+                <input name ="name" id="add_name" />
               </div>
               <div>
                 <label for="language">Please enter language</label>
-                <input name ="lang" id="add_lang" value="str" />
+                <input name ="lang" id="add_lang" />
               </div>
               <br>
                 <button>Log in</button>
             </form>
             """
-    else:
-        error = 'Неверное имя пользователя или пароль'
-    return render_template('login.html', error=error)
 
 
 @app.route("/home_page", methods=["GET", "POST"])
 def home_page():
-    return f"""
+    name = request.form.get('name')
+    language = request.form.get('lang')
+    languages = {'Python', 'Java', 'JS', 'Ruby'}
+    if name.isalpha() and language in languages:
+        return f"""
             <h3>Hello!<h3>
             <form action="/add_course" method="POST">
             <label for="language">Please enter Course</label>
@@ -65,6 +67,12 @@ def home_page():
                 <button>Add grade</button>
             </form>
         """
+    else:
+        return f"""<h3>You entered invalid name or language<h3>
+            <form action="/home_page" method="POST">
+            <a href="/">Return to Login page</a>
+            </form> 
+            """
 
 
 @app.route("/add_course", methods=["POST"])
@@ -83,7 +91,7 @@ def get_course():
                 <input type="radio" name ="basic" id="add_basic" value="str">
                 <label for="language">Python Basic</label>
             </div>
-            
+
             <br>
             <a href="/home_page">Return to Home page</a>
             </form>
