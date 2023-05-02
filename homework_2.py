@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request
 from random import randint
 
 app = Flask(__name__)
@@ -16,7 +16,6 @@ class User:
 
     def name_check(self, name):
         if name.isalpha():
-            self.name = name
             return self.name
         else:
             raise Exception
@@ -24,7 +23,6 @@ class User:
     def language_check(self, language):
         languages = {'Python', 'Java', 'JS', 'Ruby'}
         if language in languages:
-            self.language = language
             return self.language
         else:
             raise Exception
@@ -38,11 +36,11 @@ def login():
             <form action="/home_page" method="POST">
               <div>
                 <label for="name">Please enter name</label>
-                <input name ="name" id="add_name" value="str" />
+                <input name ="name" id="add_name" />
               </div>
               <div>
                 <label for="language">Please enter language</label>
-                <input name ="lang" id="add_lang" value="str" />
+                <input name ="lang" id="add_lang" />
               </div>
               <br>
                 <button>Log in</button>
@@ -50,10 +48,13 @@ def login():
             """
 
 
-
 @app.route("/home_page", methods=["GET", "POST"])
 def home_page():
-    return f"""
+    name = request.form.get('name')
+    language = request.form.get('lang')
+    languages = {'Python', 'Java', 'JS', 'Ruby'}
+    if name.isalpha() and language in languages:
+        return f"""
             <h3>Hello!<h3>
             <form action="/add_course" method="POST">
             <label for="language">Please enter Course</label>
@@ -64,6 +65,12 @@ def home_page():
                 <button>Add grade</button>
             </form>
         """
+    else:
+        return f"""<h3>You entered invalid name or language<h3>
+            <form action="/home_page" method="POST">
+            <a href="/">Return to Login page</a>
+            </form> 
+            """
 
 
 @app.route("/add_course", methods=["POST"])
