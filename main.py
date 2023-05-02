@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request
 from random import randint
 
 app = Flask(__name__)
@@ -16,7 +16,6 @@ class User:
 
     def name_check(self, name):
         if name.isalpha():
-            self.name = name
             return self.name
         else:
             raise Exception
@@ -24,7 +23,6 @@ class User:
     def language_check(self, language):
         languages = {'Python', 'Java', 'JS', 'Ruby'}
         if language in languages:
-            self.language = language
             return self.language
         else:
             raise Exception
