@@ -62,7 +62,7 @@ def home_page():
         global user
         user = User(name, language)
         return f"""
-            <h3>Hello!<h3>
+            <h3>Hello {user.name}!<h3>
             <form action="/add_course" method="POST">
             <label for="language">Please enter Course</label>
                 <button>Add course</button>
@@ -83,34 +83,48 @@ def home_page():
 @app.route("/add_course", methods=["POST"])
 def get_course():
     return f"""<h3>Course for is <h3>
-            <form action="/home_page" method="POST">
+            <form action="/show_user_info" method="POST">
             <div>
-                <input type="radio" name ="advanced" id="add_advanced" value="str">
-                <label for="language">Python Advanced</label>
+                <input type="radio" name ="course" id="add_advanced" value="Python Advanced">
+                <label for="course">Python Advanced</label>
             </div>
             <div>
-                <input type="radio" name ="Pro" id="add_pro" value="str">
-                <label for="language">Python Pro</label>
+                <input type="radio" name ="course" id="add_pro" value="Python Pro">
+                <label for="course">Python Pro</label>
             </div>
             <div>
-                <input type="radio" name ="basic" id="add_basic" value="str">
-                <label for="language">Python Basic</label>
+                <input type="radio" name ="course" id="add_basic" value="Python Basic">
+                <label for="course">Python Basic</label>
+            </div>
+            <div>
+                <input type="submit" value="Submit">
             </div>
 
             <br>
-            <a href="/home_page">Return to Home page</a>
+            <a href="/show_user_info">Return to Home page</a>
             </form>
             """
 
 
-@app.route("/add_grade", methods=["POST"])
+@app.route("/add_grade", methods=["GET", "POST"])
 def get_grade():
     grade = randint(1, 13)
-    return f"""<h3>Grade for  is {grade}<h3>
-             <a href="/">Return to Home page</a>
+    user.grade = grade
+    return f"""<h3>Grade for  {user.name} is {user.grade}<h3>
+            <form action="/show_user_info" method="POST">
+            <a href="/">Return to Home page</a>
+        <br>
+            <a href="/show_user_info">Show information about User</a>
+            </form>
     """
+
+
+@app.route("/show_user_info", methods=["GET", "POST"])
+def show_user_info():
+    user.course = request.form.get('course')
+    return f"<h3>User: {user.name}, {user.language} dev student on the course {user.course} got {user.grade} grade <h3>" \
+           f"<h3>{request.form.get('course')}<h3>"
 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
-
