@@ -3,6 +3,8 @@ from random import randint
 
 app = Flask(__name__)
 
+user = None
+
 
 class User:
     name = ''
@@ -11,21 +13,20 @@ class User:
     def __init__(self, name, language):
         self.grade = ''
         self.course = ''
-        self.name = self.name_check(name)
-        self.language = self.language_check(language)
+        self.name = self.ascii_check(name)
+        self.language = self.ascii_check(language)
 
-    def name_check(self, name):
-        if name.isalpha():
-            return self.name
+    def ascii_check(self, param):
+        if param.isalpha():
+            return param
         else:
-            raise Exception
+            raise Exception('Value contains not only letters')
 
-    def language_check(self, language):
-        languages = {'Python', 'Java', 'JS', 'Ruby'}
-        if language in languages:
-            return self.language
-        else:
-            raise Exception
+
+def validate_alfabet(form_input, error_key, error_dict=None):
+    if form_input.isalpha():
+        return form_input
+    error_dict[error_key] = 'Verbose error description'
 
 
 @app.route("/")
@@ -50,10 +51,16 @@ def login():
 
 @app.route("/home_page", methods=["GET", "POST"])
 def home_page():
-    name = request.form.get('name')
+    error_dict = {}
+    name = validate_alfabet(request.form.get('name'), 'name', error_dict)
     language = request.form.get('lang')
-    languages = {'Python', 'Java', 'JS', 'Ruby'}
-    if name.isalpha() and language in languages:
+    if error_dict:
+        return f"""
+                {error_dict['name']}
+        """
+    try:
+        global user
+        user = User(name, language)
         return f"""
             <h3>Hello!<h3>
             <form action="/add_course" method="POST">
@@ -65,7 +72,7 @@ def home_page():
                 <button>Add grade</button>
             </form>
         """
-    else:
+    except:
         return f"""<h3>You entered invalid name or language<h3>
             <form action="/home_page" method="POST">
             <a href="/">Return to Login page</a>
@@ -106,3 +113,4 @@ def get_grade():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
+
