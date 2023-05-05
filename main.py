@@ -1,3 +1,5 @@
+import sqlite3
+
 from flask import Flask, request
 from random import randint
 
@@ -52,8 +54,15 @@ def login():
 @app.route("/home_page", methods=["GET", "POST"])
 def home_page():
     error_dict = {}
-    name = validate_alfabet(request.form.get('name'), 'name', error_dict)
-    language = request.form.get('lang')
+    try:
+        name = validate_alfabet(request.form.get('name'), 'name', error_dict)
+        language = request.form.get('lang')
+    except Exception as e:
+        return f"""<h3>You must log in<h3>
+            <form action="/login_page" method="POST">
+            <a href="/">Return to Login page</a>
+            </form> 
+            """
     if error_dict:
         return f"""
                 {error_dict['name']}
@@ -61,70 +70,100 @@ def home_page():
     try:
         global user
         user = User(name, language)
+        add_user = f"""
+                INSERT INTO users VALUES ('{user.name}', '{user.language}', 'Default', '0')
+        """
+        cur.execute(add_user)
+        con.commit()
         return f"""
-            <h3>Hello {user.name}!<h3>
-            <form action="/add_course" method="POST">
-            <label for="language">Please enter Course</label>
-                <button>Add course</button>
-            </form>
+            <h3>New user {user.name}, {user.language} was created!<h3>
+            
             <form action="/add_grade" method="POST">
-            <label for="language">Please enter Grade</label>
+            <label for="grade">Please enter Grade</label>
                 <button>Add grade</button>
             </form>
-        """
+            """
     except:
         return f"""<h3>You entered invalid name or language<h3>
-            <form action="/home_page" method="POST">
+            <form action="/login_page" method="POST">
             <a href="/">Return to Login page</a>
             </form> 
             """
 
 
-@app.route("/add_course", methods=["POST"])
+@app.route("/add_grade", methods=["GET", "POST"])
+def get_grade():
+    try:
+        grade = randint(1, 13)
+        user.grade = grade
+        upd_user_grade = f"""
+        UPDATE users SET grade = {user.grade} WHERE name IS '{user.name}';
+        """
+        cur.execute(upd_user_grade)
+        con.commit()
+        return f"""<h3>Grade for {user.name} is {user.grade}<h3>
+            <form action="/add_course" method="POST">
+            <label for="language">Please enter Course</label>
+                <button>Add course</button>
+
+        <br>
+            </form>
+            <form action="/login" method="POST">
+            <a href="/login">Return to Login page</a>
+            </form>
+        """
+    except Exception:
+        return f"""<h3>You must log in<h3>
+            <form action="/login_page" method="POST">
+            <a href="/">Return to Login page</a>
+            </form> 
+            """
+
+@app.route("/add_course", methods=["GET", "POST"])
 def get_course():
-    return f"""<h3>Course for is <h3>
+    try:
+        return f"""<h3>Select Course for {user.name}<h3>
             <form action="/show_user_info" method="POST">
             <div>
-                <input type="radio" name ="course" id="add_advanced" value="Python Advanced">
+                <input type="radio" name ="course" id="add_advanced" value="Advanced">
                 <label for="course">Python Advanced</label>
             </div>
             <div>
-                <input type="radio" name ="course" id="add_pro" value="Python Pro">
+                <input type="radio" name ="course" id="add_pro" value="Pro">
                 <label for="course">Python Pro</label>
             </div>
             <div>
-                <input type="radio" name ="course" id="add_basic" value="Python Basic">
+                <input type="radio" name ="course" id="add_basic" value="Basic">
                 <label for="course">Python Basic</label>
             </div>
             <div>
                 <input type="submit" value="Submit">
             </div>
 
-            <br>
-            <a href="/show_user_info">Return to Home page</a>
+            </form>
+            <form action="/login" method="POST">
+            <a href="/login">Return to Login page</a>
             </form>
             """
-
-
-@app.route("/add_grade", methods=["GET", "POST"])
-def get_grade():
-    grade = randint(1, 13)
-    user.grade = grade
-    return f"""<h3>Grade for  {user.name} is {user.grade}<h3>
-            <form action="/show_user_info" method="POST">
-            <a href="/">Return to Home page</a>
-        <br>
-            <a href="/show_user_info">Show information about User</a>
-            </form>
-    """
-
+    except Exception:
+        return f"""<h3>You must log in<h3>
+            <form action="/login_page" method="POST">
+            <a href="/">Return to Login page</a>
+            </form> 
+            """
 
 @app.route("/show_user_info", methods=["GET", "POST"])
 def show_user_info():
     user.course = request.form.get('course')
-    return f"<h3>User: {user.name}, {user.language} dev student on the course {user.course} got {user.grade} grade <h3>" \
-           f"<h3>{request.form.get('course')}<h3>"
+    upd_user_course = f"""
+            UPDATE users SET course = '{user.course}' WHERE name IS '{user.name}';
+            """
+    cur.execute(upd_user_course)
+    con.commit()
+    return f"<h3>User: {user.name}, {user.language} dev student on the course {user.course} got {user.grade} grade <h3>"
 
 
 if __name__ == '__main__':
+    con = sqlite3.connect('users.db', check_same_thread=False)
+    cur = con.cursor()
     app.run(host='0.0.0.0', port=8000, debug=True)
