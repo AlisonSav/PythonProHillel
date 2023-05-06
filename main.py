@@ -31,6 +31,27 @@ def validate_alfabet(form_input, error_key, error_dict=None):
     error_dict[error_key] = 'Verbose error description'
 
 
+def save_data(sql, user_attr_name, user_attr_value):
+    setattr(user, user_attr_name, user_attr_value)
+    cur.execute(sql)
+    con.commit()
+
+
+def is_login(func):
+    def wrapper(*args, **kwargs):
+        if user is None:
+            return """
+                <h3>You must log in<h3>
+                <form action="/login_page" method="POST">
+                <a href="/">Return to Login page</a>
+                </form> 
+            """
+        else:
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
 @app.route("/")
 @app.route("/login")
 def login():
@@ -52,17 +73,11 @@ def login():
 
 
 @app.route("/home_page", methods=["GET", "POST"])
+#@is_login
 def home_page():
     error_dict = {}
-    try:
-        name = validate_alfabet(request.form.get('name'), 'name', error_dict)
-        language = request.form.get('lang')
-    except Exception as e:
-        return f"""<h3>You must log in<h3>
-            <form action="/login_page" method="POST">
-            <a href="/">Return to Login page</a>
-            </form> 
-            """
+    name = validate_alfabet(request.form.get('name'), 'name', error_dict)
+    language = request.form.get('lang')
     if error_dict:
         return f"""
                 {error_dict['name']}
@@ -92,16 +107,15 @@ def home_page():
 
 
 @app.route("/add_grade", methods=["GET", "POST"])
+#@is_login
 def get_grade():
-    try:
-        grade = randint(1, 13)
-        user.grade = grade
-        upd_user_grade = f"""
+    grade = randint(1, 13)
+    user.grade = grade
+    upd_user_grade = f"""
         UPDATE users SET grade = {user.grade} WHERE name IS '{user.name}';
-        """
-        cur.execute(upd_user_grade)
-        con.commit()
-        return f"""<h3>Grade for {user.name} is {user.grade}<h3>
+    """
+    save_data(upd_user_grade, "grade", grade)
+    return f"""<h3>Grade for {user.name} is {user.grade}<h3>
             <form action="/add_course" method="POST">
             <label for="language">Please enter Course</label>
                 <button>Add course</button>
@@ -112,17 +126,12 @@ def get_grade():
             <a href="/login">Return to Login page</a>
             </form>
         """
-    except Exception:
-        return f"""<h3>You must log in<h3>
-            <form action="/login_page" method="POST">
-            <a href="/">Return to Login page</a>
-            </form> 
-            """
+
 
 @app.route("/add_course", methods=["GET", "POST"])
+#@is_login
 def get_course():
-    try:
-        return f"""<h3>Select Course for {user.name}<h3>
+    return f"""<h3>Select Course for {user.name}<h3>
             <form action="/show_user_info" method="POST">
             <div>
                 <input type="radio" name ="course" id="add_advanced" value="Advanced">
@@ -145,14 +154,10 @@ def get_course():
             <a href="/login">Return to Login page</a>
             </form>
             """
-    except Exception:
-        return f"""<h3>You must log in<h3>
-            <form action="/login_page" method="POST">
-            <a href="/">Return to Login page</a>
-            </form> 
-            """
+
 
 @app.route("/show_user_info", methods=["GET", "POST"])
+#@is_login
 def show_user_info():
     user.course = request.form.get('course')
     upd_user_course = f"""
